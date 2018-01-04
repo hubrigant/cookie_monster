@@ -11,13 +11,8 @@ CREATE TABLE "raw_ingredients"
     [ingredient] NVARCHAR(160) NOT NULL
 );
 
-ALTER TABLE "urls"
-(
-    ADD cached_at INTEGER
-);
+ALTER TABLE "urls" ADD cached_at INTEGER;
 
-ALTER TABLE "raw_ingredients"
-(
-    ADD processed_at INTEGER
-    ADD recipe_id NVARCHAR(160)
-);
+ALTER TABLE "raw_ingredients" ADD processed_at INTEGER;
+ALTER TABLE "raw_ingredients" ADD recipe_id NVARCHAR(160);
+
