@@ -10,3 +10,14 @@ CREATE TABLE "raw_ingredients"
     [ingredientid] INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     [ingredient] NVARCHAR(160) NOT NULL
 );
+
+ALTER TABLE "urls"
+(
+    ADD cached_at INTEGER
+);
+
+ALTER TABLE "raw_ingredients"
+(
+    ADD processed_at INTEGER
+    ADD recipe_id NVARCHAR(160)
+);
