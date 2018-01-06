@@ -3,6 +3,10 @@ from bs4 import BeautifulSoup
 import re
 from time import sleep
 import sqlite3
+import logging
+
+logging.basicConfig(filename="output.log", level=logging.INFO,
+                    format=('%(asctime)s - %(levelname)s - %(message)s'))
 
 
 conn = sqlite3.connect('recipes.db')
@@ -44,8 +48,8 @@ def get_n_recipes(query, n=10):
     page = 1
     query = "cookies"
     rthumbnails = []
-    print("DEV> len(rthumbnails): ", len(rthumbnails))
-    print("Searching for ", n, " recipes related to ", query,
+    logging.info("DEV> len(rthumbnails): ", len(rthumbnails))
+    logging.debug("Searching for ", n, " recipes related to ", query,
           "calls: ", calls, "; page: ", page)
     while calls >= 0:
         curr_rthumbnails = recipe_search(query, page)
@@ -68,7 +72,7 @@ def main():
     # url_list = get_n_recipes("cookies", n=2840)
     # c.execute("SELECT title, url FROM urls")
     # url_list = c.fetchall()
-    # print("url_list is a: ", type(url_list[0]))
+    # logging.debug("url_list is a: ", type(url_list[0]))
     # sys.stdout.flush()
     recipes = dict()
     ingredients = []
@@ -78,7 +82,7 @@ def main():
     for (title, url) in c.execute("SELECT title, url FROM urls"):
         sleep(1)
         # r = requests.get(recipe["url"])
-        # print("Recipe is: ", recipe[0])
+        # logging.debug("Recipe is: ", recipe[0])
         recipe_id = url.split('-')[-1]
         recipe_key = title + "-" + recipe_id
         recipe_key = re.sub("\s+", '_', recipe_key)
@@ -93,19 +97,16 @@ def main():
         try:
             # if not ingredients_list.match("^\s+$"):
             # for entry in ingredients_list:
-            #    print("Entry: ", entry)
-            # print("Size of ingredients: ", len(ingredients_list))
+            #    logging.debug("Entry: ", entry)
+            logging.debug("Size of ingredients: ", len(ingredients_list))
             for raw_ing in ingredients_list:
                 # t = (raw_ing,)
-                # print("raw_ing is: ", raw_ing, ":")
-                # sys.stdout.flush()
-                # print("DEV> inside ingredients loop")
                 # c.execute("INSERT INTO raw_ingredients (ingredient) VALUES (?)",
                 #          raw_ing)
                 # conn.commit()
                 sql_str = "INSERT INTO raw_ingredients (ingredient) VALUES "
                 sql_str = sql_str + "(\'" + raw_ing + "\')"
-                # print(sql_str)
+                logging.debug(sql_str)
                 ingredients.append(sql_str)
                 # recipes.update(title = sql_str)
                 if recipe_key not in recipes:
@@ -113,10 +114,10 @@ def main():
                 recipes[recipe_key].append({"title": title,
                                             "sql_str": sql_str})
                 if cnt % 100 == 0:
-                    print("DEV[" + str(cnt) + "]> " + recipe_key)
+                    logging.info("DEV[" + str(cnt) + "]> " + recipe_key)
                 cnt += 1
         except TypeError as e:
-            print("Error thrown: ", e)
+            logging.error("Error thrown: ", e)
             continue
     max_title_len = 0
     max_sql_len = 0
