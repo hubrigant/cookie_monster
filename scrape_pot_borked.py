@@ -99,10 +99,14 @@ def main():
     # qry_str = "SELECT title, url, cached_at FROM urls"
     # c.execute(qry_str)
     # for row in c.fetchall:
-    for (title, url) in c.execute("SELECT title, url FROM urls"):
-        # title = row[0]
-        # url = row[1]
-        # cached_at = row[2]
+    for row in c.execute("SELECT title, url FROM urls"):
+        # error returned:
+        #   ValueError: not enough values to unpack (expected 2, got 1)
+        title, url = row
+        # error returned:
+        #   ValueError: not enough values to unpack (expected 3, got 2)
+        # title, url, cached_at = row
+        logging.warning(type(row))
         sleep(1)
         # r = requests.get(recipe["url"])
         # logging.debug("Recipe is: ", recipe[0])
