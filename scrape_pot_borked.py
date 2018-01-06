@@ -5,13 +5,16 @@ import re
 from time import sleep, time
 import sqlite3
 import sys
+import logging
 
+logging.basicConfig(filename="output.log", level=logging.DEBUG,
+                    format=('%(asctime)s - %(levelname)s - %(message)s'))
 
 conn = sqlite3.connect('recipes.db')
 c = conn.cursor()
 runtime = str(int(time()))
 tup = (runtime,)
-print("DEV> started at ", runtime)
+logging.info("DEV> started at ", runtime)
 # c.execute("UPDATE urls SET cached_at = ? WHERE cached_at < 1", tup)
 # conn.commit
 
@@ -19,8 +22,8 @@ base_url = "http://www.foodnetwork.com"
 url_base = "http:"
 
 
-def eprint(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
+# def eprint(*args, **kwargs):
+#    print(*args, file=sys.stderr, **kwargs)
 
 
 def recipe_search(query, page=1, sortby="Best Match"):
@@ -61,15 +64,15 @@ def get_n_recipes(query, n=10):
     page = 1
     query = "cookies"
     rthumbnails = []
-    print("DEV> len(rthumbnails): ", len(rthumbnails))
-    print("Searching for ", n, " recipes related to ", query,
+    logging.debug("DEV> len(rthumbnails): ", len(rthumbnails))
+    logging.info("Searching for ", n, " recipes related to ", query,
           "calls: ", calls, "; page: ", page)
     while calls >= 0:
         curr_rthumbnails = recipe_search(query, page)
         if len(curr_rthumbnails) == 0:
             break
         rthumbnails.extend(curr_rthumbnails)
-        print("DEV> page: ", page, "; calls: ", calls)
+        logging.debug("DEV> page: ", page, "; calls: ", calls)
         page += 1
         calls -= 1
         sleep(1)
@@ -85,8 +88,7 @@ def main():
     # url_list = get_n_recipes("cookies", n=2840)
     # c.execute("SELECT title, url FROM urls")
     # url_list = c.fetchall()
-    # print("url_list is a: ", type(url_list[0]))
-    # sys.stdout.flush()
+    # logging.debug("url_list is a: ", type(url_list[0]))
     recipes = dict()
     ingredients = []
     cnt = 0
@@ -103,12 +105,12 @@ def main():
         # cached_at = row[2]
         sleep(1)
         # r = requests.get(recipe["url"])
-        # print("Recipe is: ", recipe[0])
+        # logging.debug("Recipe is: ", recipe[0])
         recipe_id = url.split('-')[-1]
         proc_at = c.execute("SELECT processed_at from raw_ingredients")
         result = proc_at.fetchone()
         if int(result[0]) > 1:
-            eprint("The recipe " + title + " has been processed")
+            logging.debug("The recipe " + title + " has been processed")
             continue
         recipe_key = title + "-" + recipe_id
         recipe_key = re.sub("\s+", '_', recipe_key)
@@ -123,13 +125,13 @@ def main():
         try:
             # if not ingredients_list.match("^\s+$"):
             # for entry in ingredients_list:
-            #    print("Entry: ", entry)
-            # print("Size of ingredients: ", len(ingredients_list))
+            #    logging.debug("Entry: ", entry)
+            # logging.debug("Size of ingredients: ", len(ingredients_list))
             for raw_ing in ingredients_list:
                 # t = (raw_ing,)
-                # print("raw_ing is: ", raw_ing, ":")
+                # logging.debug("raw_ing is: ", raw_ing, ":")
                 # sys.stdout.flush()
-                # print("DEV> inside ingredients loop")
+                # logging.debug("DEV> inside ingredients loop")
                 # c.execute("INSERT INTO raw_ingredients (ingredient) VALUES (?)",
                 #          raw_ing)
                 # conn.commit()
@@ -138,7 +140,7 @@ def main():
                 sql_str = sql_str + "processed_at, recipe_id) VALUES "
                 sql_str = sql_str + "(\'" + raw_ing + "\', " + runtime
                 sql_str = sql_str + ", \'" + recipe_id + "\');"
-                print(sql_str)
+                logging.debug(sql_str)
                 ingredients.append(sql_str)
                 # recipes.update(title = sql_str)
                 if recipe_key not in recipes:
@@ -146,23 +148,23 @@ def main():
                 recipes[recipe_key].append({"title": title,
                                             "sql_str": sql_str})
                 if cnt % 20 == 0:
-                    print("STATUS[" + str(cnt) + "]> " + recipe_key)
+                    logging.info("STATUS[" + str(cnt) + "]> " + recipe_key)
                 cnt += 1
         except (TypeError, UnicodeEncodeError) as e:
-            print("Error thrown: ", e)
+            logging.warning("Error thrown: ", e)
             continue
     max_title_len = 0
     max_sql_len = 0
     for key in recipes:
         title = recipes[key]["title"]
         sql_str = recipes[key]["sql_str"]
-        # print(sql_str)
+        # logging.debug(sql_str)
         if len(title) > max_title_len:
             max_title_len = len(title)
         if len(sql_str) < max_sql_len:
             max_sql_len = len(sql_str)
-    print("Max title: ", max_title_len)
-    print("Max sql: ", max_sql_len)
+    logging.info("Max title: ", max_title_len)
+    logging.info("Max sql: ", max_sql_len)
     conn.close()
 
 
